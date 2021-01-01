@@ -2,19 +2,29 @@
 int main(void){
     int newUser;
     int exitStatus;
-    int pipes[2];
-    char* userName = (char*)calloc(MAX_SZ, sizeof(char));
-    pipe(pipes);
+    int regPipes[2];
+    int vetPipes[2];
+    char* masterPass = (char*)calloc(MAX_SZ, sizeof(char));
     printf("Are you new?: ");
     scanf("%d", &newUser); 
     if(newUser){
-        printf("Enter a password: ");
-        scanf("%s", userName);
+        printf("Enter a Master password (You can't reset this): ");
+        scanf("%s", masterPass);
         int fp = open("./locker.txt", O_WRONLY | O_CREAT, 0777);
+        pipe(regPipes);
         pid_t pid = fork();
-        firstTime(pid, pipes, userName, fp, exitStatus);
+        setup(pid, regPipes, masterPass, fp, exitStatus);
+        printf("Setup done\n");
+        //Portal entry is done
+        /*TODO: Password entries open*/
     }else{
-        printf("Leave, implementation coming soon :)) \n");
+    	 char* buffer = (char*)calloc(MAX_SZ, sizeof(char));
+        printf("Enter Master password: ");
+        scanf("%s", masterPass);
+        pipe(vetPipes);
+        pid_t pid = fork();
+        validator(pid, vetPipes, masterPass, buffer, exitStatus);
+        strVald(buffer, masterPass);
     }
     return 0;
 }
