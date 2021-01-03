@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <string.h>
 
 #define MAX_SZ 40
@@ -22,7 +23,7 @@ void setup(pid_t pid, int pipes[], char* masterPass, int fp, int exitStatus){
         close(0);
         dup(pipes[0]);
         close(1);
-        dup(fp);
+        dup(fp); 
         close(pipes[1]);
         execl("/usr/bin/shasum", "/usr/bin/shasum", NULL); 
         close(pipes[0]);
@@ -41,27 +42,28 @@ void strVald(char* hashedInput, char* masterPass){
     }
 }
 
-
-void validator(pid_t pid, int pipes[], char* masterPass, char* hashedInput, int exitStatus){
+void validator(pid_t pid, int pipes[], char* masterPass, int tempFP, char* tempBuffer, int exitStatus){
 	if(pid == 0){
 		//Write into pipe
 		close(pipes[0]);
+		close(tempFP);
 		write(pipes[1], masterPass, strlen(masterPass));
 		close(pipes[1]);
-	}else{
+	}
+	else{
 		//Read from pipes
 		close(0);
 		dup(pipes[0]);
 		close(1);
-		dup(pipes[1]);
-		//use fdopen ----- finish later
-		execl("/usr/bin/shasum", "/usr/bin/shasum", NULL);
-		
-		scanf("%s  -", hashedInput);
+		dup(tempFP);
+		close(pipes[1]);
+		execl("/usr/bin/shasum", "/usr/bin/shasum", NULL);	
 		close(pipes[0]);
-		close(1);
-		pid_t deadChild = wait(&exitStatus);
+		tempBuffer[0] = getc(tempFP);
+		int bytes = read(tempFP, tempBuffer, 20);
+		close(tempFP);
 	}
+	pid_t deadChild = wait(&exitStatus);
 }
 
 
