@@ -11,6 +11,9 @@
 #include <string.h>
 
 #define MAX_SZ 40
+#define ADD 1
+#define EDIT 2
+#define REMOVE 3
 
 void setup(int pipes[], char* masterPass, int fp, int exitStatus){
     pid_t pid = fork();
@@ -32,15 +35,6 @@ void setup(int pipes[], char* masterPass, int fp, int exitStatus){
         close(pipes[0]);
         close(fp);
         pid_t deadChild = wait(&exitStatus);
-    }
-}
-//Finish this function below for a returning user
-void strVald(char* hashedInput, char* hashedMaster){
-    if(strcmp(hashedInput, hashedMaster) == 0){
-        //User is in
-        printf("Access granted.\n");
-    }else{
-        printf("Wrong\n");
     }
 }
 
@@ -84,6 +78,28 @@ void validator(int pipes[], int buffPipes[], char* masterPass, char* hashedInput
     }
 }
 
+int strVald(char *hashedInput, char *hashedMaster)
+{
+    if (strcmp(hashedInput, hashedMaster) == 0)
+    {
+        //User is in
+        printf("Access granted.\n");
+        return 1;
+    }
+    else
+    {
+        printf("Wrong\n");
+        return 0;
+    }
+}
+
+void hashedMasterPass(char *hashedMaster)
+{
+    FILE *fd;
+    fd = fopen("locker.txt", "r");
+    int x = fread(hashedMaster, 1, 40, fd);
+    fclose(fd);
+}
 
 void freeBuffs(char* hashedInput, char* masterPass, char* hashedMaster){
     free(hashedInput);
@@ -91,4 +107,51 @@ void freeBuffs(char* hashedInput, char* masterPass, char* hashedMaster){
     free(hashedMaster);
 }
 
+int boot(int newUser){
+    int hasAccess;
+    int exitStatus;
+
+    /* BUFFERS */
+    char *masterPass = (char *)calloc(MAX_SZ, sizeof(char));
+    char *hashedMaster = (char *)calloc(MAX_SZ, sizeof(char));
+    char *hashedInput = (char *)calloc(MAX_SZ, sizeof(char));
+    /*  ----   */
+
+    int fp;
+
+    /* PIPES */
+    int regPipes[2];
+    int vetPipes[2];
+    int buffPipes[2];
+    /*  ----   */
+
+    if (newUser)
+    {
+        printf("Enter a Master password (You can't reset this): ");
+        scanf("%s", masterPass);
+        fp = open("./locker.txt", O_WRONLY | O_CREAT, 0777);
+        pipe(regPipes);
+        setup(regPipes, masterPass, fp, exitStatus);
+        printf("Setup done\n");
+        hasAccess = 1;
+    }
+    else
+    {
+        printf("Enter Master password: ");
+        scanf("%s", masterPass);
+        pipe(vetPipes);
+        pipe(buffPipes);
+        validator(vetPipes, buffPipes, masterPass, hashedInput, exitStatus);
+        hashedMasterPass(hashedMaster);
+        hasAccess = strVald(hashedInput, hashedMaster);
+    }
+    freeBuffs(hashedInput, masterPass, hashedMaster);
+    return hasAccess;
+}
+
+void addEntry(){
+
+
+
+}
 #endif
