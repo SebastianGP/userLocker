@@ -96,7 +96,7 @@ int strVald(char *hashedInput, char *hashedMaster)
     }
     else
     {
-        printf("Wrong\n");
+        printf("Wrong, try again!\n");
         return 0;
     }
 }
@@ -158,9 +158,4 @@ int boot(int newUser){
     return hasAccess;
 }
 
-void addEntry(){
-
-
-
-}
 #endif
