@@ -4,9 +4,10 @@ int main(void)
 {
     int newUser;
     int running = 1;
-    int hasAccess = 0;
+    int hasAccess = 1;
     int selection;
-    int exit = 0;
+    int terminate = 0;
+    printf("1 for yes, 0 for no\n");
     printf("Are you new?: ");
     scanf("%d", &newUser);
 
@@ -28,9 +29,11 @@ int main(void)
                 break;
         }
 
-        if(exit){
+        if(terminate == 3){
             printf("Terminating :)\n");
+            exit(0);
         }
+        terminate += 1;
     }
     
     return 0;

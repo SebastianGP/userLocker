@@ -22,20 +22,28 @@ void setup(int pipes[], char* masterPass, int fp, int exitStatus){
         close(fp);
         write(pipes[1], masterPass, strlen(masterPass));
         close(pipes[1]);
+        exit(0);
     }
     else{
-        //STD_IN -> PIPE[0] -> execl(STD_IN)
-        close(0);
-        dup(pipes[0]);
-        //execl(STD_IN) -> STD_OUT -> FP (OPEN FILE)
-        close(1);
-        dup(fp); 
-        close(pipes[1]);
-        execl("/usr/bin/shasum", "/usr/bin/shasum", NULL); 
-        close(pipes[0]);
-        close(fp);
-        pid_t deadChild = wait(&exitStatus);
+        pid_t pid2 = fork();
+        if(pid2 == 0){
+            //STD_IN -> PIPE[0] -> execl(STD_IN)
+            close(0);
+            dup(pipes[0]);
+            //execl(STD_IN) -> STD_OUT -> FP (OPEN FILE)
+            close(1);
+            dup(fp);
+            close(pipes[1]);
+            execl("/usr/bin/shasum", "/usr/bin/shasum", NULL);
+            close(pipes[0]);
+            close(fp);
+            exit(0);
+        }
+        else{
+            pid_t deadChild = wait(&exitStatus);
+        }
     }
+    
 }
 
 void validator(int pipes[], int buffPipes[], char* masterPass, char* hashedInput, int exitStatus){
@@ -108,7 +116,7 @@ void freeBuffs(char* hashedInput, char* masterPass, char* hashedMaster){
 }
 
 int boot(int newUser){
-    int hasAccess;
+    int hasAccess = 0;
     int exitStatus;
 
     /* BUFFERS */
@@ -125,7 +133,7 @@ int boot(int newUser){
     int buffPipes[2];
     /*  ----   */
 
-    if (newUser)
+    if (newUser == 1)
     {
         printf("Enter a Master password (You can't reset this): ");
         scanf("%s", masterPass);
@@ -133,6 +141,7 @@ int boot(int newUser){
         pipe(regPipes);
         setup(regPipes, masterPass, fp, exitStatus);
         printf("Setup done\n");
+        close(fp);
         hasAccess = 1;
     }
     else
